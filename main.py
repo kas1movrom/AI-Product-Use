@@ -1,23 +1,22 @@
 import json
 import string
-import spacy
-import nltk
-import pymorphy2
-import matplotlib.pyplot as plt
-
 from collections import Counter
 from wordcloud import WordCloud
+import matplotlib.pyplot as plt
+import nltk
+from nltk.corpus import wordnet as wn
+import spacy
 from collections import defaultdict
 from nltk.corpus import stopwords
-from nltk.corpus import wordnet as wn
 
-nltk.download('wordnet')
-nltk.download('omw-1.4')
+
 nltk.download('stopwords')
-
 stop_words = set(stopwords.words('russian'))
 
 nlp = spacy.load("ru_core_news_sm")
+
+nltk.download('wordnet')
+nltk.download('omw-1.4')
 
 
 def process_responses(responses):
@@ -50,31 +49,13 @@ russian_stopwords = [
     'как', 'когда', 'почему', 'что', 'чем', 'зачем', 'тот', 'другой'
 ]
 
+
 english_stopwords = [
     'and', 'the', 'is', 'in', 'to', 'a', 'that', 'it', 'of', 'on',
     'for', 'with', 'as', 'are', 'at', 'by', 'this', 'an', 'be',
     'from', 'not', 'but', 'or', 'which', 'who', 'when', 'where',
     'why', 'how', 'so', 'all', 'any', 'some', 'many', 'few'
 ]
-
-
-def get_stem(word, lang):
-    if lang == 'en':
-        synsets = nltk.corpus.wordnet.synsets(word)
-        if synsets:
-            return synsets[0].lemmas()[0].name() 
-    elif lang == 'ru':
-        return morph.parse(word)[0].normal_form
-    return word
-
-
-def remove_duplicates(words):
-    unique_words = set()
-    for word in words:
-        lang = 'ru' if any(char in 'абвгдежзийклмнопрстуфхцчшщъыьэюя' for char in word) else 'en'
-        stem = get_stem(word, lang)
-        unique_words.add(stem) 
-    return unique_words
 
 
 def preprocess_text(text, language='russian'):
@@ -99,10 +80,12 @@ def load_data_from_json(file_path):
     with open(file_path, 'r', encoding='utf-8') as file:
         data = json.load(file)
     return data['responses']
+
+
 def count_words(responses):
     words = []
     for response in responses:
-        if any(char.isalpha() for char in response): 
+        if any(char.isalpha() for char in response):  # Проверяем наличие букв
             if any(char in string.ascii_letters for char in response):
                 words.extend(preprocess_text(response, 'english').split())
             else:
@@ -115,7 +98,7 @@ def generate_wordcloud(word_counts):
 
     plt.figure(figsize=(10, 5))
     plt.imshow(wordcloud, interpolation='bilinear')
-    plt.axis('off')  # Отключаем оси
+    plt.axis('off')
     plt.show()
 
 
@@ -123,7 +106,7 @@ def get_synonyms(word):
     synonyms = set()
     for syn in wn.synsets(word):
         for lemma in syn.lemmas():
-            synonyms.add(lemma.name())
+            synonyms.add(lemma.name())  # добавляем синонимы
     return synonyms
 
 
@@ -144,5 +127,5 @@ file_path = 'responses.json'
 responses = load_data_from_json(file_path)
 word_counts = count_words(responses)
 
-print(word_counts.most_common(10))
+
 generate_wordcloud(word_counts)
